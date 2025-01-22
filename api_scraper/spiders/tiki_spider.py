@@ -44,6 +44,7 @@ class TikiSpider(scrapy.Spider):
                 "product_id": product["id"],
                 "product_name": product["name"],
                 "quantity_sold": product["quantity_sold"]["value"],
+                "price": product["price"]
             }
 
             product_url = f"https://tiki.vn/api/v2/products/{product['id']}"
@@ -59,8 +60,13 @@ class TikiSpider(scrapy.Spider):
 
     def parse_product_details(self, response):
         data = json.loads(response.body)
+        meta = response.meta
+        description = clean_html_with_regex(data["description"])
+        words = description.split(" ")
+        short_description = " ".join(words[:50])
+
 
         yield {
             "product_url": data["short_url"],
-            "description": clean_html_with_regex(data["description"]),
+            "description": f"{short_description}. Giá: {meta['price']} VND. Đã bán {meta['quantity_sold']}. ",
         }
